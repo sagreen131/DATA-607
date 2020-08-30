@@ -1,0 +1,97 @@
+## Shana Green
+## DATA 607 - Homework 1
+## Due Date: 8/29/2020
+
+
+### Introduction
+
+Tennis is an individual sport in which the player uses a racquet to hit a ball over a net into the opponent's court. As a great admirer of tennis, it is a time-consuming sport to watch. Carl Bialik’s article [Why Some Tennis Matches Take Forever](https://fivethirtyeight.com/features/why-some-tennis-matches-take-forever) analyzes certain variables to convey why is this the case in tennis.
+
+
+
+```{r}
+# Loading data sets for the events, players, and servers
+ 
+event <- read.csv("https://raw.githubusercontent.com/sagreen131/DATA-607-HW-1/master/events_time.csv")
+
+player <- read.csv("https://raw.githubusercontent.com/sagreen131/DATA-607-HW-1/master/players_time.csv")
+
+server <- read.csv("https://raw.githubusercontent.com/sagreen131/DATA-607-HW-1/master/serve_times.csv")
+
+```
+
+
+### Summary stats for all variables in events, players, and servers
+```{r}
+
+View(event)
+View(player)
+View(server)
+
+summary(event)
+summary(player)
+summary(server)
+
+```
+
+### The mean, median, standard deviation, and variance of the events, players, and server of a given match
+
+```{r}
+
+mean(event$seconds_added_per_point,ra.rm = TRUE)
+mean(player$seconds_added_per_point, na.rm = TRUE)
+mean(server$seconds_before_next_point, na.rm = TRUE)
+    
+
+median(event$seconds_added_per_point,ra.rm = TRUE)
+median(player$seconds_added_per_point, na.rm = TRUE)
+median(server$seconds_before_next_point, na.rm = TRUE)
+    
+sd(event$seconds_added_per_point)
+sd(player$seconds_added_per_point)
+sd(server$seconds_before_next_point)
+
+var(event$seconds_added_per_point)
+var(player$seconds_added_per_point)
+var(server$seconds_before_next_point)
+
+```
+
+#### Is there a correlation between surface and the seconds added per point in a given tournament? I created two subsets and compared grass to clay with respect to time. 
+
+```{r}
+
+numgrass<-subset(event,seconds_added_per_point<0 & surface == "Grass")
+View(numgrass)
+summary(numgrass)
+
+numclay<-subset(event,seconds_added_per_point>0 & surface == "Clay")
+View(numclay)
+summary(numclay)
+
+```
+According to the analysis, when tournaments are played on grass, the players generally play faster. However, when tournaments are played on clay, the players play slower. Nine games were played faster on grass, in comparison to seventy games played slower on clay. 
+
+
+####Does the number of deuces affect the speed of a player?
+
+```{r}
+
+numdeuce<-subset(server,seconds_before_next_point>20 & game_score == "Deuce")
+View(numdeuce)
+summary(numdeuce)
+
+numdeuce2<-subset(server,seconds_before_next_point<20 & game_score == "Deuce")
+View(numdeuce2)
+summary(numdeuce2)
+
+numdeuce$server
+numdeuce2$server
+
+```
+Nick Kyrgios has the best speed average before the next point for a deuce. He is the only server who appears on both data sets and is the number 25th fastest player.
+
+### Findings and Recommendations
+
+The harder the surface of a tennis match, the greater the time a player spends in between their sets. I loved Carl Bialik’s analysis on correlating the player's speed over the years. I recommend an additional variable to be considered. Since Tennis is an outdoor sport, weather plays a major role as well. Rain, for example can affect the surface of a given match. If this vital information is added, it may change the data analysis. 
+
