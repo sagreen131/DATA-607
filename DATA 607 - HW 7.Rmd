@@ -1,0 +1,106 @@
+---
+title: "Assignment – Working with XML and JSON in R"
+author: ''
+output:
+  html_document:
+    df_print: paged
+  pdf_document:
+    extra_dependencies:
+    - geometry
+    - multicol
+    - multirow
+---
+
+## Shana Green
+## DATA 607 - Homework 7
+## Due Date: 10/10/2020
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+library(jsonlite)
+library(rvest)
+library(dplyr)
+library(RCurl)
+library(stringr)
+library(arsenal)
+
+```
+
+## Loading books from an HTML file
+
+```{r}
+# Loading from HTML
+book_a<-as.data.frame(read_html("https://raw.githubusercontent.com/sagreen131/DATA-607-HW-7/main/books.html")%>% html_table(fill=TRUE))
+
+```
+
+```{r}
+htmldf <- book_a %>% `colnames<-`(c('Title', 'Authors', 'ISBN', 'Edition', 'Topics'))
+
+htmldf <- select(htmldf, Title, Authors, ISBN, Edition, Topics)
+htmldf
+```
+
+## Loading books from an XML file
+
+
+```{r}
+library(XML)
+```
+
+
+```{r}
+# Loading from XML
+book_b <- read_xml("https://raw.githubusercontent.com/sagreen131/DATA-607-HW-7/main/books.xml")
+
+book_b_2 <-xmlParse(book_b)
+
+xmldf <- xmlToDataFrame(book_b_2)
+xmldf <- xmldf %>% `colnames<-`(c('Title', 'Authors', 'ISBN', 'Edition', 'Topics'))
+
+```
+
+```{r}
+xmldf
+```
+
+## Loading books from an JSON file
+
+
+```{r}
+# Loading from JSON
+book_c <- fromJSON("https://raw.githubusercontent.com/sagreen131/DATA-607-HW-7/main/books.json")
+
+```
+
+```{r}
+jsondf <- as.data.frame(book_c)
+jsondf <- jsondf %>% `colnames<-`(c('Title', 'Authors', 'ISBN', 'Edition', 'Topics'))
+
+```
+
+```{r}
+jsondf
+```
+
+
+## Summary
+
+The data frames are very similar. The only difference I saw was that the HTML df displayed the ISBN as a double with exponents, as opposed to the character string. I thought it would make sense to assign column names in HTML and XML.
+
+
+```{r}
+summary(comparedf(htmldf,xmldf))
+```
+
+Github [here](https://github.com/sagreen131/DATA-607-HW-7.git)
+
+
+
+
+Rpubs [here](https://rpubs.com/sagreen131/673555)
