@@ -1,0 +1,407 @@
+## Shana Green
+## DATA 607 - Project 2
+### Due Date: 10/03/2020
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## DATA 607 – Project 2 
+ 
+ 
+The goal of this assignment is to give you practice in preparing different datasets for downstream analysis work. 
+ 
+Your task is to: 
+
+(1) Choose any three of the “wide” datasets identified in the Week 6 Discussion items.  (You may use your own dataset; please don’t use my Sample Post dataset, since that was used in your Week 6 assignment!)  For each of the three chosen datasets: 
+
+Create a .CSV file (or optionally, a MySQL database!) that includes all of the information included in the dataset. You’re encouraged to use a “wide” structure similar to how the informatIon appears in the discussion item, so that you can practice tidying and transformations as described below. 
+
+Read the information from your .CSV file into R, and use tidyr and dplyr as needed to tidy and transform your data.  [Most of your grade will be based on this step!] 
+
+Perform the analysis requested in the discussion item. 
+
+Your code should be in an R Markdown file, posted to rpubs.com, and should include narrative descriptions of your data cleanup work, analysis, and conclusions.   
+
+
+
+(2) Please include in your homework submission, for each of the three chosen datasets: 
+
+The URL to the .Rmd file in your GitHub repository, and  
+
+The URL for your rpubs.com web page. 
+
+```{r}
+
+library(knitr)
+library(stringr)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+
+```
+
+
+## Dataset 1
+
+For the first dataset, I wanted to use the original file from FiveThirtyEight article [Should Travelers Avoid Flying Airplanes That Have Had Crashes in the Past?](https://fivethirtyeight.com/features/should-travelers-avoid-flying-airlines-that-have-had-crashes-in-the-past/). I chose this as my discussion post and I wanted to compare the number of incidents, fatal incidents, and fatalities. I wanted to see if there was a correlation between the time frame of airline safety over a span of thirty years. 
+
+```{r}
+# Upload data set 
+air_safe<-read.csv("https://raw.githubusercontent.com/fivethirtyeight/data/master/airline-safety/airline-safety.csv", header = FALSE, stringsAsFactors = FALSE)
+
+head(air_safe)
+```
+
+```{r}
+summary(air_safe)
+```
+
+
+As we can see here, we need to do some data cleaning before doing our analysis. 
+
+```{r}
+# Renaming row header
+names(air_safe) <- air_safe[1,]
+head(air_safe)
+```
+
+```{r}
+#Remove row 1
+
+air_safe <- air_safe[-c(1),]
+head(air_safe)
+```
+I noticed that in order for me to mutate and add additional variables, I have to convert the chr columns that are numeric into numeric. 
+
+```{r}
+
+# Convert from chr to numeric
+
+air_safe$avail_seat_km_per_week <- as.numeric(as.character(air_safe$avail_seat_km_per_week))
+
+air_safe$incidents_85_99<-as.numeric(as.character(air_safe$incidents_85_99))
+
+air_safe$fatal_accidents_85_99<-as.numeric(as.character(air_safe$fatal_accidents_85_99))
+
+air_safe$fatalities_85_99<-as.numeric(as.character(air_safe$fatalities_85_99))
+
+air_safe$incidents_00_14<-as.numeric(as.character(air_safe$incidents_00_14))
+
+air_safe$fatal_accidents_00_14<-as.numeric(as.character(air_safe$fatal_accidents_00_14))
+
+air_safe$fatalities_00_14<-as.numeric(as.character(air_safe$fatalities_00_14))
+
+head(air_safe)
+```
+
+
+Let's create a total tab that adds the total number of incidents, fatal accidents, and fatalities in 1985 to 1999:
+
+```{r}
+
+air_safe <- air_safe %>%
+    mutate(total_85_99 = incidents_85_99 + fatal_accidents_85_99 + fatalities_85_99, total_00_14 = incidents_00_14 + fatal_accidents_00_14 + fatalities_00_14)
+
+head(air_safe)
+
+```
+
+
+I wanted to create a new dataset that focused only on the airline and their totals from 85-99 and 00-14
+
+```{r}
+air_total<-select(air_safe, airline, total_85_99, total_00_14)
+head(air_total)
+```
+
+```{r}
+summary(air_total)
+```
+
+I used the spread function that I created for air_total to display the Airline numbers in a wide data set. 
+
+
+```{r}
+# Wide from 85 to 99
+air_wide85 <-spread(air_total, airline, total_85_99)
+head(air_wide85)
+```
+
+```{r}
+summary(air_wide85)
+```
+
+```{r}
+# Wide from 85 to 99
+air_wide00 <-spread(air_total, airline, total_00_14)
+head(air_wide00)
+```
+
+```{r}
+summary(air_wide00)
+```
+
+I wanted to sort who had the most incidents, fatal accidents, and fatalities between 1985 and 1999.
+
+```{r}
+air_max85<-air_total[order(air_total$total_85_99, decreasing = TRUE),]
+head(air_max85)
+
+```
+
+```{r}
+summary(air_max85)
+```
+
+According to the data, China Airlines had the most combined incidents, fatal incidents, and fatalities from 1985 to 1999. 
+
+```{r}
+air_max00<-air_total[order(air_total$total_00_14, decreasing = TRUE),]
+head(air_max00)
+
+```
+On the other hand, Malaysia Airlines had the most combined incidents, fatal incidents, and fatalities from 2000 to 2014. China Airlines, however is in the top 5. This shows very little improvement over the span of 30 years. 
+
+```{r}
+
+ggplot(air_total, aes(x = "", y = total_85_99, fill = airline)) +  
+          geom_bar(stat="identity",position="dodge") + 
+          xlab("Airlines") + ylab("Incidents, Fatal Incidents, & Fatalities 1985 to 1999") 
+```
+
+```{r}
+ggplot(air_total, aes(x = "", y = total_00_14, fill = airline)) +  
+          geom_bar(stat="identity",position="dodge") + 
+          xlab("Airlines") + ylab("Incidents, Fatal Incidents, & Fatalities 2000 to 2014") 
+```
+
+I highly recommend looking and introducing flight times because the time of the day plays a major role in incidents, fatal incidents, and fatalities. In addition to this, I also recommend including the types of disasters that have occurred. 
+
+
+
+
+
+## Dataset 2
+
+I chose Magnus Skonberg's dataset that he retrieved from the [World Happiness Report]("https://www.kaggle.com/unsdsn/world-happiness") on kaggle.com. I saved the csv file on my github page. We will compare the Happiness Score and GDP per capita for the Top 20 countries and see if there is a correlation between the two.
+
+```{r}
+#Upload data set
+
+happy<- read.csv("https://raw.githubusercontent.com/sagreen131/DATA-607-Project-2/main/2019.csv", header = TRUE, stringsAsFactors = FALSE)
+
+head(happy)
+
+```
+
+```{R}
+summary(happy)
+```
+I will create a new data set and focus on the top 20 countries by overall rank.
+
+```{r}
+happy20 <-happy[1:20,]
+
+happy20
+```
+
+```{r}
+summary(happy20)
+```
+Upon reviewing the new data set, I wanted to first compare some of the variables in the data set.
+
+```{r}
+
+freedom<-happy20[order(happy20$Freedom.to.make.life.choices, decreasing = TRUE),]
+head(freedom)
+
+```
+
+```{r}
+corruption<-happy20[order(happy20$Perceptions.of.corruption, decreasing = TRUE),]
+head(corruption)
+```
+
+
+```{r}
+healthy<-happy20[order(happy20$Healthy.life.expectancy, decreasing = TRUE),]
+head(healthy)
+
+```
+
+```{r}
+
+generous<-happy20[order(happy20$Generosity, decreasing = TRUE),]
+head(generous)
+```
+
+Upon reviewing the 4 variables, I noticed that Norway is in the top 10 in each category. Finland is listed in the top 10 in 2 out of 4 variables. Sweden is in 3 out of the 4 variables. United States is listed in only 1 of the 4 variables. 
+
+Let's add up the column variable by creating a new column variable and then compare them to the Score and GDP per capita. 
+
+```{r}
+
+happy20 <- happy20 %>%
+    mutate(Total = Social.support + Healthy.life.expectancy + Freedom.to.make.life.choices + Generosity + Perceptions.of.corruption)
+```
+
+```{r}
+colnames(happy20)
+```
+
+```{r}
+happy20_total<-select(happy20, Country.or.region, Score, GDP.per.capita, Total)
+head(happy20_total)
+
+```
+
+I noticed that although Finland is at the top of the list overall, the total variables column I created does not dictate that Finland has the highest overall score.
+
+
+```{r}
+# Sort by Total
+happy20_total[order(happy20_total$Total, decreasing = TRUE),]
+
+```
+
+```{r}
+# Sort by GDP
+happy20_total[order(happy20_total$GDP.per.capita, decreasing = TRUE),]
+
+```
+
+After sorting out the data sets, Norway is in the top 3 for each category. Luxembourg, however tops the list with highest number of GDP per capita. 
+
+```{r}
+# Scores
+ggplot(happy20_total, aes(x = "", y = Score, fill = Country.or.region)) +  geom_bar(stat="identity",position="dodge") + 
+          xlab("Country or Region") + ylab("Scores")
+
+```
+
+```{r}
+# GDP
+ggplot(happy20_total, aes(x = "", y = GDP.per.capita, fill = Country.or.region)) +  geom_bar(stat="identity",position="dodge") + 
+          xlab("Country or Region") + ylab("GDP Per Capita")
+```
+
+```{r}
+# Total
+ggplot(happy20_total, aes(x = "", y = Total, fill = Country.or.region)) +  
+          geom_bar(stat="identity",position="dodge") + 
+          xlab("Country or Region") + ylab("Total")
+```
+
+There is no correlation between the Happiness Score and the GDP per capita. Using the GDP per capita analysis on this data set is ineffective. In order for this data to become more accurate, we would need to consider one important variable: The classes of people. GDP per capita measures the quality of life, but we must take into consideration the classes of people (upper, lower, and middle class) and income levels.
+
+
+
+## Dataset 3
+
+I used Jered Ataky's dataset that he retrieved from an article called [Students Performance in Exams]("https://www.kaggle.com/spscientist/students-performance-in-exams") on kaggle.com. I saved the csv file on my github page. We will check to see if there is a correlation between students performance and parental level of education. 
+
+
+
+```{r}
+# Upload data set
+
+students<-read.csv("https://raw.githubusercontent.com/sagreen131/DATA-607-Project-2/main/StudentsPerformance.csv", header=TRUE, stringsAsFactors=FALSE)
+
+head(students)
+```
+ Let's clean up and rename the columns for neatness!
+
+```{r}
+names(students)[1] <- "Gender"
+names(students)[2] <- "Race.Ethnicity"
+names(students)[3] <- "Parental.LOE"
+names(students)[4] <- "Lunch"
+names(students)[5]<- "Test.Prep"
+names(students)[6] <- "Math"
+names(students)[7] <- "Reading"
+names(students)[8] <- "Writing"
+
+head(students)
+```
+
+Since there are one thousand observations with only 8 variables, it's safe to say we can spread the data set some more.
+
+```{r}
+students_wide<-spread(students, Parental.LOE, Test.Prep)
+head(students_wide)
+
+```
+
+
+Let's sort out the scores for Math, Reading and Writing:
+
+
+```{r}
+# Math 
+students_M<-students[order(students$Math, decreasing = TRUE),]
+head(students_M)
+```
+By sorting out the data for Math, group E students have taken the top three spots here. Of the three, two are female. If we take a look at the 6th indivdual listed here, he has received 100 percent in all three categories!
+
+```{r}
+# Reading
+students_R<-students[order(students$Reading, decreasing = TRUE),]
+head(students_R)
+```
+By sorting out the data for Reading, it is split between group C,D, and E. More females have taken the spots in this scenario. The student who is at the top of the list has a parent who has a Master's Degree. This is the second case I came across when comparing all three subjects. 
+```{r}
+# Writing 
+students_W<-students[order(students$Writing, decreasing = TRUE),]
+head(students_W)
+
+```
+By sorting out the data for Writing, the females have dominated the first six spots. In comparison to Reading, the top student also has a parent who has obtained a Master's Degree. In addition to this, this is the second student who did not have any Test Prep. 
+
+
+I will create a new column to to average the three subjects and attach it to the data frame. 
+
+```{r}
+
+students <- students %>%
+    mutate(MRW.avg= (Math + Reading + Writing)/3)
+
+head(students)
+```
+
+
+```{r}
+
+students_avg<-select(students, Gender, Parental.LOE, Math, Reading, Writing, MRW.avg)
+head(students_avg)
+```
+
+
+```{r}
+students_avg<-students_avg[order(students_avg$MRW.avg, decreasing = TRUE),]
+head(students_avg)
+
+```
+
+
+```{r}
+ggplot(students_avg, aes(x = "", y = MRW.avg, fill = Parental.LOE)) +  geom_bar(stat="identity",position="dodge") + 
+          xlab("Parental Level of Education") + ylab("Average Scores")
+```
+
+After completing the analysis, there is correlation between student's performance and parental education. There are several factors that may need to take place for a more thorough analysis. 
+
+1. Demographics
+2. Single family vs. Double Family?
+3. One Parent vs. Two Parent's Education levels
+
+
+
+
+Github[here]("https://github.com/sagreen131/DATA-607-Project-2.git")
+
+
+
+RPubs [here]("https://rpubs.com/sagreen131/670150")
