@@ -1,0 +1,105 @@
+## Shana Green
+## DATA 607 - Homework 3
+## Due Date: 9/12/2020
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### 1. Using the 173 majors listed in fivethirtyeight.com’s College Majors dataset [The Economic Guide To Picking A College Major](https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/), provide code that identifies the majors that contain either "DATA" or "STATISTICS".
+
+```{r}
+
+# Loading data sets for the college majors
+
+majors<-read.csv("https://raw.githubusercontent.com/fivethirtyeight/data/master/college-majors/majors-list.csv")
+
+grep(pattern = 'STATISTICS|DATA', majors$Major, value = TRUE, ignore.case = TRUE)
+
+```
+
+Two results produced STATISTICS and one with DATA. 
+
+
+### 2. Write code that transforms the data below:
+
+[1] "bell pepper"  "bilberry"     "blackberry"   "blood orange"
+
+[5] "blueberry"    "cantaloupe"   "chili pepper" "cloudberry"  
+
+[9] "elderberry"   "lime"         "lychee"       "mulberry"    
+
+[13] "olive"        "salal berry"
+
+Into a format like this:
+
+c("bell pepper", "bilberry", "blackberry", "blood orange", "blueberry", "cantaloupe", "chili pepper", "cloudberry", "elderberry", "lime", "lychee", "mulberry", "olive", "salal berry")
+
+```{r}
+
+fruitveggie<-'[1] "bell pepper"  "bilberry"     "blackberry"   "blood orange"
+
+[5] "blueberry"    "cantaloupe"   "chili pepper" "cloudberry"  
+
+[9] "elderberry"   "lime"         "lychee"       "mulberry"    
+
+[13] "olive"        "salal berry"'
+
+
+fruitveggie
+
+```
+
+
+```{r}
+
+#I created an empty vector of fruitveg and I split the elements using the strsplit function by removing the "\" string.
+
+fruitveg<-vector()
+
+splitfruitveggie <- strsplit(fruitveggie,"\"")[[1]]
+
+fruitveg<-splitfruitveggie[c(FALSE,TRUE)]
+
+fruitveg
+
+```
+
+The two exercises below are taken from R for Data Science, 14.3.5.1 in the on-line version:
+
+### 3. Describe, in words, what these expressions will match:
+
+```
+(.)\1\1
+"(.)(.)\\2\\1"
+(..)\1
+"(.).\\1.\\1"
+"(.)(.)(.).*\\3\\2\\1" 
+```
+
+**(.)\1\1** matches the same characters that appear three times in a row.
+For example, "bbb".
+
+**"(.)(.)\\2\\1"** matches a pair of characters, followed by the same pair in reverse order. For example, "cddc"
+
+**(..)\1** matches any two characters repeated. For example, "f6f6".
+
+**"(.).\\1.\\1"** matches a character, followed by any character, then the original, then any character, and finally the original character. For example, "abada".
+
+**"(.)(.)(.).*\\3\\2\\1"** selects three characters, followed by zero or more characters produced in reversed order. For example, "hij6jih".
+
+
+# 4. Construct regular expressions to match words that:
+
+Start and end with the same character.
+
+```
+str_subset(words, "^(.)((.*\\1$|1?$)") 
+```
+
+Contain a repeated pair of letters (e.g. "church" contains "ch" repeated twice.)
+Contain one letter repeated in at least three places (e.g. "eleven" contains three "e"s.)
+
+```
+str_subset(words, "([A-Za-z][A-Za-z]).*\\1")
+```

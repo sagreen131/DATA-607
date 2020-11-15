@@ -1,0 +1,135 @@
+## Shana Green
+## DATA 607 - Homework 5
+## Due Date: 9/26/2020
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The chart above describes arrival delays for two airlines across five destinations.  Your task is to: 
+
+
+(1) Create a .CSV file (or optionally, a MySQL database!) that includes all of the information above.  You’re encouraged to use a “wide” structure similar to how the information appears above, so that you can practice tidying and transformations as described below. 
+
+(2) Read the information from your .CSV file into R, and use tidyr and dplyr as needed to tidy and transform your data.   
+
+(3) Perform analysis to compare the arrival delays for the two airlines. 
+
+(4) Your code should be in an R Markdown file, posted to rpubs.com, and should include narrative descriptions of your data cleanup work, analysis, and conclusions.  Please include in your homework submission: 
+
+The URL to the .Rmd file in your GitHub repository and the URL for your rpubs.com web page. 
+
+```{r}
+
+library(knitr)
+library(stringr)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+
+```
+
+
+```{r}
+
+# Upload CSV file
+
+airlines <- read.csv("https://raw.githubusercontent.com/sagreen131/DATA-607-HW-5/master/numbersense.csv", header=FALSE, sep=",", stringsAsFactors=FALSE)
+                    
+airlines
+```
+
+
+As we can see here, we need to do some data cleaning before doing our analysis. The CSV file is missing two column names. 
+
+```{r}
+# Rename header columns
+
+airlines$V1[1] <- "Airlines"
+airlines$V2[1] <- "Flight Status"
+airlines
+
+```
+
+```{r}
+# Renaming row header
+
+names(airlines) <- airlines[1,]
+airlines
+
+```
+
+Let's delete Row 1 and 4
+
+```{r}
+
+airlines <- airlines[-c(1,4),]
+airlines
+```
+
+After doing this, I noticed empty spaces for ALASKA and AM WEST. I will proceed to add in data in given data set.
+
+```{r}
+
+airlines$Airlines[2] = 'ALASKA'
+airlines$Airlines[4] = 'AM WEST'
+View(airlines)
+
+```
+
+
+I will use the gather function to gather columns into rows. Doing this creates long data instead of wide data here.
+
+```{r}
+
+airlines <-gather(airlines, city, number, 3:7, factor_key = TRUE)
+airlines
+
+# I transposed columns 3 to 7 (Los Angeles, Phoenix, San Diego, San Francisco, and Seattle) here and displayed their listed numbers
+```
+
+I will do the same using the spread function, but instead display the Flight Status.
+
+```{r}
+
+airlines <-  airlines %>%
+                 spread("Flight Status", `number`)
+airlines
+
+```
+
+Although the delayed and on time column displays numeric value, I noticed that both columns were listed in chr.
+
+```{r}
+# Convert from chr to numeric
+
+airlines$delayed <- as.numeric(as.character(airlines$delayed))
+airlines$`on time`<- as.numeric(as.character(airlines$'on time'))
+
+```
+Using the dplyr package, I will add a total variable to add the total number of delayed and on time flights, in addition to the delayed percentage.
+
+```{r}
+airlines <- airlines %>% 
+  mutate(total = delayed + `on time`, delayed.percentage = (delayed/total)*100) 
+
+airlines
+```
+
+
+```{r}
+
+
+ggplot(airlines, aes(x = Airlines, y = delayed.percentage, fill = city)) +  
+          geom_bar(stat="identity", position="dodge") + 
+          xlab("Airlines") + ylab("Delays") 
+```
+
+After analyzing the data, we can see here that flights from San Francisco from both airlines, experience the most delays. Phoenix, on the other hand, has the least number of delayed flights from both airlines. 
+
+
+
+Github link [here](https://github.com/sagreen131/DATA-607-HW-5.git)
+
+Rpubs link [here](https://rpubs.com/sagreen131/666666)
