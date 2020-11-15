@@ -1,0 +1,101 @@
+## Shana Green
+## DATA 607 - Project 1
+## Due Date: 9/19/2020
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data Analysis: Chess Tournament 
+
+In this project, you’re given a text file with chess tournament results where the information has some structure.  Your job is to create an R Markdown file that generates a .CSV file (that could for example be imported into a SQL database) with the following information for all of the players: 
+
+Player’s Name, Player’s State, Total Number of Points, Player’s Pre-Rating, and Average Pre Chess Rating of Opponents 
+
+For the first player, the information would be: 
+
+Gary Hua, ON, 6.0, 1794, 1605 
+
+1605 was calculated by using the pre-tournament opponents’ ratings of 1436, 1563, 1600, 1610, 1649, 1663, 1716, and dividing by the total number of games played. 
+
+If you have questions about the meaning of the data or the results, please post them on the discussion forum.  Data science, like chess, is a game of back and forth. 
+
+The chess rating system (invented by a Minnesota statistician named Arpad Elo) has been used in many other contexts, including assessing relative strength of employment candidates by human resource departments. 
+ 
+
+You may substitute another text file (or set of text files, or data scraped from web pages) of similar or greater complexity, and create your own assignment and solution.  You may work in a small team.  All of your code should be in an R markdown file (and published to rpubs.com); with your data accessible for the person running the script. 
+
+### Loading the data 
+```{r}
+chess <- read.csv("C:/Users/SAGreen/Documents/SPS/Fall 2020/DATA 607/Project/Project 1/tournamentinfo.txt", header=F)
+
+head(chess)
+
+```
+
+Upon uploading the tournament data, there is a pattern of where the hyphens are located in each row. By running the head of the data, there are hyphens located in the 1st, 4th, 7th, 10th, (3n+1) row. 
+
+
+### Removing the heading rows of the chess tournament
+
+```{r}
+
+chess_info <- chess[-c(1:3),]
+head(chess_info)
+
+```
+
+Now that the heading is removed, I also noticed the subjects of each row also has a pattern. The numeric value of each player is listed in the 2nd, 5th, 8th (3n+2) row. The player's states are listed in the 3rd, 6th, 9th, (3n+3) row.
+
+### Removing the player numeric value and the states listed
+```{r}
+
+n <- length(chess_info)
+first_row <- chess_info[seq(2, n, 3)]
+second_row <- chess_info[seq(3, n, 3)]
+
+```
+
+
+### Extracting data for each column
+```{r}
+library(stringr)
+
+Player <- as.integer(str_extract(first_row, "\\d+"))
+
+Name <- str_trim(str_extract(first_row, "(\\w+\\s){2,3}")) 
+
+State <- str_extract(second_row, "\\w+")
+
+Points <- as.numeric(str_extract(first_row, "\\d+\\.\\d+"))
+
+PreRating <- as.integer(str_extract(str_extract(second_row, "[^\\d]\\d{3,4}[^\\d]"), "\\d+"))
+
+Opponents <- str_extract_all(str_extract_all(first_row, "\\d+\\|"), "\\d+")
+
+```
+### Calculating the Average Opponent Scores
+```{r}
+Opponent_PreRating <- numeric(n / 3)
+
+for (i in 1:(n / 3)) { 
+  Opponent_PreRating[i] <- mean(PreRating[as.numeric(unlist(Opponents[Player[i]]))]) 
+}
+
+```
+
+### Creating the Data Frame here
+```{r}
+
+csv <- data.frame(Name, State, Points, PreRating, Opponent_PreRating); csv
+```
+
+### Exporting Data into a CSV file
+```{r}
+
+write.table(csv, file = "DATA 607 - Project1.csv", sep = ",", col.names = T)
+```
+
+Github link [here](https://github.com/sagreen131/DATA-607-Project-1.git)
+
+Rpubs link [here](https://rpubs.com/sagreen131/662980)
