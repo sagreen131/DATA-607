@@ -1,0 +1,47 @@
+## Shana Green
+## DATA 607 - Homework 2
+## Due Date: 9/05/2020
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Introduction
+
+For this assignment, I asked my friends and family to give me their input on six movies. This includes a sql file, in addition to the document. 
+
+### Setup R and install packages
+
+```{r}
+
+library(RMySQL)
+
+```
+
+### Connecting to MySQL
+
+```{r}
+
+mydb = dbConnect(MySQL(), user='data607', password='data607!', dbname='moviesdb', host='localhost')
+
+```
+
+### Run query to select data from database
+```{r}
+
+movieData <-dbGetQuery(mydb,"SELECT m.title, c.user_name, r.review, r.rating FROM movies m
+INNER JOIN reviews r
+ON m.id = r.v_id
+INNER JOIN critics c
+ON r.c_id = c.user_id;")
+
+```
+
+
+### Aggregate the data
+
+```{r}
+
+aggregate(rating ~ title, data = movieData, FUN=mean)
+
+```
