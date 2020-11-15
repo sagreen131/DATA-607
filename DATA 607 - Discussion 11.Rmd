@@ -1,0 +1,62 @@
+---
+title: "Pandora Recommender Systems"
+author: "Shana Green"
+output:
+  pdf_document: default
+  html_document:
+    includes:
+      in_header: header.html
+    css: ./lab.css
+    highlight: pygments
+    theme: cerulean
+    toc: true
+    toc_float: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = FALSE, fig.show = "hide", message = FALSE)
+```
+
+
+
+
+## Introduction
+
+Pandora is a leading music and podcast discovery platform, providing a highly-personalized listening experience to approximately 70 million users each month with its proprietary Music Genome Project® and Podcast Genome Project® technology - whether at home or on the go - through its mobile app, the web, and integrations with more than 2,000 connected products. As the largest streaming music provider in the U.S., with an industry-leading digital audio advertising platform, Pandora connects listeners with the audio entertainment they love. Pandora is a subsidiary of Sirius XM Holdings Inc. (NASDAQ: SIRI). Together, Pandora and SiriusXM have created the world's largest audio entertainment company. [1]
+
+## Sentiment Analysis
+
+### Who are your target users?
+
+Pandora’s target users are the individuals who stream music through Wi-fi or cell network signal. Company offers an Offline Mode feature, that is available with Pandora Plus and Pandora Premium. The basic services are free with advertisements and/or limitations. 
+
+Audience: Active users were 68.8 million at the end of the third quarter of 2018, and total listener hours were 4.81 billion for the third quarter of 2018. Pandora Plus and Pandora Premium subscribers were approximately 6.8 million at the end of the third quarter of 2018, and our Premium Access offering continues to show momentum, as over 32 million listeners have used Premium Access since its launch to date. [2]
+
+### What are their key goals?
+
+Pandora’s key goal is for the audience to have a personalized radio station, based on their favorite artist or genre. 
+
+
+
+### How can you help them accomplish these goals?
+
+According to https://www.theserverside.com/, Pandora’s recommender uses about 70 different algorithms: 10 analyze content, 40 process collective intelligence, and then another 30 do personalized filtering. One of the reoccurring issues when it comes to recommender systems in music is that one’s taste in music changes quite frequently. The user may not like the same song this year, as opposed to last year. [3]
+
+
+## Recommendations 
+
+Although Pandora does a great job with the music selection, the following things should be changed:
+
+1.	Allow the user to choose up to five artists/genres and allocate it into one mega playlist.
+2.	Introduce a numerical scaling system, as opposed to the thumbs up/thumbs down rating. 
+
+## Sources
+
+[1] https://www.pandora.com/about 
+
+[2] https://investor.siriusxm.com/investor-overview/press-releases/press-release-details/2018/Pandora-Reports-Q3-2018-Financial-Results/default.aspx
+
+[3] https://www.theserverside.com/feature/How-Pandora-built-a-better-recommendation-engine
+

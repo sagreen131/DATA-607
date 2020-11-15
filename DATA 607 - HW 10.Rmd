@@ -1,0 +1,349 @@
+---
+title: "Assignment - Text Mining"
+author: "Shana Green"
+date: "DATA 607 - Homework 10, Due: 10/30/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Assignment
+
+In Text Mining with R, [Chapter 2 looks at Sentiment Analysis](https://www.tidytextmining.com/sentiment.html). In this assignment, you should start by getting the primary example code from chapter 2 working in an R Markdown document. You should provide a citation to this base code.  You’re then asked to extend the code in two ways:
+
+Work with a different corpus of your choosing, and 
+Incorporate at least one additional sentiment lexicon (possibly from another R package that you’ve found through research).
+
+As usual, please submit links to both an .Rmd file posted in your GitHub repository and to your code on rpubs.com.  You make work on a small team on this assignment.
+
+
+```{r}
+library(tidyverse)
+library(janeaustenr)
+library(tidytext)
+library(stringr)
+library(dplyr)
+library(tidyr)
+library(wordcloud)
+```
+
+### Setting up the example code from ‘Text Mining with R’ Chapter 2
+
+I took the code directly from the text: “2 Sentiment Analysis with Tidy Data.” Text Mining with R: a Tidy Approach, by Julia Silge and David Robinson, O’Reilly Media, 2017. I also downloaded the NRC code from [Saif Mohammad and Peter Turney](https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-8640.2012.00460.x).
+
+```{r}
+get_sentiments("afinn")
+```
+
+```{r}
+get_sentiments("bing")
+```
+
+```{r}
+get_sentiments("nrc")
+```
+
+```{r}
+tidy_books <- austen_books() %>%
+group_by(book) %>%
+mutate(linenumber = row_number(),
+chapter = cumsum(str_detect(text, regex("^chapter [\\divxlc]",
+ignore_case = TRUE)))) %>%
+ungroup() %>%
+unnest_tokens(word, text)
+
+nrc_joy <- get_sentiments("nrc") %>% 
+  filter(sentiment == "joy")
+
+tidy_books %>%
+  filter(book == "Emma") %>%
+  inner_join(nrc_joy) %>%
+  count(word, sort = TRUE)
+```
+
+```{r}
+janeaustensentiment <- tidy_books %>%
+inner_join(get_sentiments("bing")) %>%
+count(book, index = linenumber %/% 80, sentiment) %>%
+spread(sentiment, n, fill = 0) %>%
+mutate(sentiment = positive - negative)
+```
+
+```{r}
+ggplot(janeaustensentiment, aes(index, sentiment, fill = book)) +
+geom_col(show.legend = FALSE) +
+facet_wrap(~book, ncol = 2, scales = "free_x")
+```
+
+```{r}
+# comparing 3 sentiment dictionaries
+
+pride_prejudice <- tidy_books %>% 
+  filter(book == "Pride & Prejudice")
+
+pride_prejudice
+```
+```{r}
+afinn <- pride_prejudice %>% 
+  inner_join(get_sentiments("afinn")) %>% 
+  group_by(index = linenumber %/% 80) %>% 
+  summarise(sentiment = sum(value)) %>% 
+  mutate(method = "AFINN")
+
+bing_and_nrc <- bind_rows(pride_prejudice %>% 
+                            inner_join(get_sentiments("bing")) %>%
+                            mutate(method = "Bing et al."),
+                          pride_prejudice %>% 
+                            inner_join(get_sentiments("nrc") %>% 
+                                         filter(sentiment %in% c("positive", 
+                                                                 "negative"))) %>%
+                            mutate(method = "NRC")) %>%
+  count(method, index = linenumber %/% 80, sentiment) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative)
+
+get_sentiments("nrc") %>% 
+     filter(sentiment %in% c("positive", 
+                             "negative")) %>% 
+  count(sentiment)
+```
+
+```{r}
+get_sentiments("bing") %>% 
+  count(sentiment)
+```
+```{r}
+# most common positive and negative words
+bing_word_counts <- tidy_books %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  ungroup()
+
+bing_word_counts
+```
+```{r}
+bing_word_counts %>%
+  group_by(sentiment) %>%
+  top_n(10) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(y = "Contribution to sentiment",
+       x = NULL) +
+  coord_flip()
+```
+```{r}
+
+custom_stop_words <- bind_rows(tibble(word = c("miss"), 
+                                          lexicon = c("custom")), 
+                               stop_words)
+
+custom_stop_words
+```
+```{r}
+# wordclouds
+tidy_books %>%
+  anti_join(stop_words) %>%
+  count(word) %>%
+  with(wordcloud(word, n, max.words = 100))
+```
+
+
+### Corpus
+
+Hamlet, by William Shakespeare is one of my favorite plays. I decided to use [gutenbergr](https://cran.r-project.org/web/packages/gutenbergr/index.html) package and the link for the play is [here](http://www.gutenberg.org/cache/epub/2265/pg2265.html). 
+
+
+```{r}
+library(gutenbergr)
+```
+
+### Get Gutenberg_ID
+```{r}
+
+gutenberg_metadata %>% 
+    filter(author == "Shakespeare, William",
+           title == "Hamlet",
+           language == "en",
+           !str_detect(rights, "Copyright"))
+
+```
+
+According to the search, 2265 is the gutenberg_id to download Hamlet.
+
+### Downloading Book
+
+```{r}
+hamlet <- gutenberg_download(2265)
+```
+
+```{r}
+hamlet
+```
+
+### Convert Data to Tidy
+
+```{r}
+tidy_hamlet <- hamlet %>%
+  unnest_tokens(word, text)
+
+tidy_hamlet
+```
+
+
+### Restructuring Data 
+
+```{r}
+tidy_hamlet <- hamlet %>%
+  unnest_tokens(word, text)
+
+tidy_hamlet
+```
+
+### Removing Stop Words
+
+```{r}
+data(stop_words)
+
+tidy_hamlet <- tidy_hamlet %>%
+  anti_join(stop_words)
+
+```
+
+### Counting Number of Words
+
+```{r}
+tidy_hamlet %>%
+  count(word, sort = TRUE)
+```
+
+### Visualizing the Word Frequency
+
+```{r}
+tidy_hamlet %>%
+  count(word, sort = TRUE) %>%
+  top_n(20, n) %>%
+  ggplot(aes(x = fct_reorder(word, n), y = n, fill = word)) +
+  geom_col(show.legend = FALSE) +
+  scale_fill_viridis_d(option = "inferno") +
+  coord_flip() +
+  xlab(NULL) +
+  labs(title = "Hamlet - Word Frequency") +
+  theme_minimal()
+```
+
+The most used word is **ham** for *Hamlet*. 
+
+
+### Sentiment Analysis using nrc
+
+```{r}
+tidy_hamlet <- hamlet %>%
+  mutate(gutenberg_id = row_number(),
+         chapter = cumsum(str_detect(text, 
+                                     regex("^chapter [\\divxlc]",
+                                           ignore_case = TRUE)))) %>%
+  ungroup() %>%
+  unnest_tokens(word, text)
+
+sentiment_hamlet <- get_sentiments("nrc")
+sentiment_hamlet
+           
+```
+
+```{r}
+nrc_joy <- get_sentiments("nrc") %>%
+  filter(sentiment == "joy")
+
+nrc_joy
+```
+
+```{r}
+tidy_hamlet %>%
+#filter(title == "Hamlet") %>%
+inner_join(nrc_joy) %>%
+count(word, sort = TRUE)
+
+```
+
+### Sentiment Analysis using bing
+
+```{r}
+bing_hamlet <- tidy_hamlet %>%
+inner_join(get_sentiments("bing")) %>%
+count(word, sentiment, sort = TRUE) %>%
+ungroup()
+
+bing_hamlet
+```
+```{r}
+bing_hamlet %>%
+group_by(sentiment) %>%
+top_n(10) %>%
+ungroup() %>%
+mutate(word = reorder(word, n)) %>%
+ggplot(aes(word, n, fill = sentiment)) +
+geom_col(show.legend = FALSE) +
+facet_wrap(~sentiment, scales = "free_y") +
+labs(y = "Contribution to sentiment",
+     x = NULL) +
+coord_flip() +
+    geom_text(aes(label = n, hjust = 1.0))
+```
+
+*death, mar*, and *dead* are the most negative words used in **Hamlet**.
+
+*good, like*, and *well* are the most positive words used in **Hamlet**.
+
+
+```{r}
+library(reshape2)
+```
+
+```{r}
+tidy_hamlet %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+  comparison.cloud(colors = c("gray20", "gray80"),
+                   max.words = 100)
+```
+
+
+### Additional Lexicon
+
+I will use the Loughran lexicon to perfom sentiment analysis from [here](https://sraf.nd.edu/textual-analysis/resources/)
+
+```{r}
+get_sentiments("loughran")
+```
+
+```{r}
+lexi_hamlet <- tidy_hamlet %>%
+inner_join(get_sentiments("loughran")) %>%
+count(word, sentiment, sort = TRUE) %>%
+ungroup()
+
+lexi_hamlet
+```
+
+```{r}
+lexi_hamlet %>%
+group_by(sentiment) %>%
+top_n(10) %>%
+ungroup() %>%
+mutate(word = reorder(word, n)) %>%
+ggplot(aes(word, n, fill = sentiment)) +
+geom_col(show.legend = FALSE) +
+facet_wrap(~sentiment, scales = "free_y") +
+labs(y = "Contribution to sentiment",
+     x = NULL) +
+coord_flip() +
+    geom_text(aes(label = n, hjust = 1.0))
+```
+
+After applying the loughran lexicon, the word *may* is the most litigious word used in **Hamlet**, which bypasses the word *good* from the bing analysis. 

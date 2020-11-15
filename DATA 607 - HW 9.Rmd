@@ -1,0 +1,71 @@
+---
+title: "Assignment – Web APIs"
+author: "Shana Green"
+date: " DATA 607 - Homework 9, Due: 10/24/2020"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(knitr)
+library(httr)
+library(jsonlite)
+```
+
+### Assignment/Introduction
+
+Your task is to choose one of the New York Times APIs, construct an interface in R to read in the JSON data, and transform it into an R DataFrame. 
+
+
+I went on the [NY Times API](https://developer.nytimes.com/apis) website and I chose the Books API, since I am a fan of reading books. I chose the “Book Sellers History”. I retrieved info for the history to see the last few best sellers. 
+
+
+[Link here](https://developer.nytimes.com/docs/books-product/1/overview)
+
+### Preparing Data
+
+```{r}
+
+ex<-GET("https://api.nytimes.com/svc/books/v3/lists/best-sellers/history.json?api-key=AkaADUlHKZkrwFyA3iDtzBbhtuZMECIa")
+
+
+cat("The status returned is:", ex$status_code)
+
+```
+### Converting JSON Data
+```{r}
+data <- fromJSON(rawToChar(ex$content))
+names(data)
+
+```
+
+```{r}
+df<-data.frame(data$results, stringsAsFactors = FALSE)
+
+```
+
+
+### View the data
+```{r}
+df %>% 
+select(title, description, author, publisher, reviews) %>% 
+rename("Title" = title, "Description" = description,"Author" = author, "Publisher" = publisher, "Reviews"=reviews) %>% 
+kable
+
+```
+### Confirm if data frame works
+
+```{r}
+
+tf <- is.data.frame(df)
+cat("Is this a dataframe?", tf)
+```
+
+### Conclusion 
+
+I was able to retrieve, format and use the API from The New York Times. 
